@@ -72,16 +72,16 @@ public class Data {
     		for (int j=0; j<FinaleMatrice.getRowDimension(); ++j)
     			FinaleMatrice.set(i, j, Math.sqrt(FinaleMatrice.get(i, j)));
     	Matrix x = Decomposition.getV().times(FinaleMatrice);
-    	Ville[] villes = new Ville[tableauCout.length];
+    	Ville[] villes = new Ville[tableauCout.length+1];
     	for (int i=0; i<tableauCout.length; ++i) {
     		villes[i] = new Ville(x.get(i, tableauCout.length-2), x.get(i, tableauCout.length-1), i);
     	}
     	
-    	
+    	villes[tableauCout.length] = new Ville(0, 0, 0);
     	for(int i=0; i<villes.length; i++) {
     		villes[i].affichage();
     	}
-    	Circuit scenario = new Circuit(villes);
+    	Circuit scenario = new Circuit(villes, tableauCout);
     	
     	return scenario;
     	
