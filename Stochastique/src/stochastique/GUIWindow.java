@@ -24,6 +24,9 @@ import java.awt.GridBagLayout;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.RowSpec;
+
+import ilog.concert.IloException;
+
 import javax.swing.BoxLayout;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -54,7 +57,7 @@ public class GUIWindow {
 	JLabel lblNewLabel_4;
 
 	private static int algorithmChosenIndex;
-	private static String dataAddress; // The address of data chosen by client
+	private static String dataAddress = "a280"; // The address of data chosen by client
 
 	private static float temperature;
 	private static int iteration;
@@ -72,9 +75,6 @@ public class GUIWindow {
 	/**
 	 * Launch the application.
 	 */
-	public static void main(String[] args) {
-		
-	}
 
 	/**
 	 * Create the application.
@@ -84,9 +84,10 @@ public class GUIWindow {
 	public GUIWindow() throws DocumentException {
 
 		initialize();
+		//dataAddress = "a280";
 		//calcul();
 		//dataResultAddress = "C:\\Users\\vince\\Documents\\eclipse-workspace\\CoodinateResult\\src\\a280-result.tsp"; // The result of algorithm.
-		Data test = new Data("a280");
+		Data test = new Data(dataAddress);
 		scenario = test.CoutToXY();
 		
 		//numbreSommets = 280; // The result of algorithm.
@@ -110,7 +111,7 @@ public class GUIWindow {
 		panel.setLayout(new GridLayout(numParametre, 2, 10, 10));
 
 		// parameter of "recuit pour le TSP (deterministe)" as default
-		panel.add(new JLabel("Temp "));
+		panel.add(new JLabel("Temp"));
 		jtfName.setSize(10, 5);
 		panel.add(jtfName);
 		panel.add(new JLabel("iter "));
@@ -192,11 +193,11 @@ public class GUIWindow {
 		frmProblemeDuVoyager.getContentPane().add(comboBox);
 		// splitPane.add(comboBox,1);
 
-		// æ·»åŠ æ�¡ç›®é€‰ä¸­çŠ¶æ€�æ”¹å�˜çš„ç›‘å�¬å™¨
+		// Ã¦Â·Â»Ã¥Å Â Ã¦ï¿½Â¡Ã§â€ºÂ®Ã©â‚¬â€°Ã¤Â¸Â­Ã§Å Â¶Ã¦â‚¬ï¿½Ã¦â€�Â¹Ã¥ï¿½ËœÃ§Å¡â€žÃ§â€ºâ€˜Ã¥ï¿½Â¬Ã¥â„¢Â¨
 		comboBox.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
-				// å�ªå¤„ç�†é€‰ä¸­çš„çŠ¶æ€�
+				// Ã¥ï¿½ÂªÃ¥Â¤â€žÃ§ï¿½â€ Ã©â‚¬â€°Ã¤Â¸Â­Ã§Å¡â€žÃ§Å Â¶Ã¦â‚¬ï¿½
 				if (e.getStateChange() == ItemEvent.SELECTED) {
 					System.out.println("algorithmChosenIndex: " + comboBox.getSelectedIndex() + " = "
 							+ comboBox.getSelectedItem());
@@ -270,10 +271,37 @@ public class GUIWindow {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				// TODO Auto-generated method stub
-				temperature = Float.parseFloat(jtfName.getText());
-				iteration = Integer.parseInt(jtfName1.getText());
-				refroid = Float.parseFloat(jtfName2.getText());
-				kopt = Integer.parseInt(jtfName3.getText());
+				try {
+					temperature = Float.parseFloat(jtfName.getText());
+				}
+				catch(java.lang.NumberFormatException e1) {
+					temperature = 0;
+				}
+				
+				try {
+					iteration = Integer.parseInt(jtfName1.getText());
+				}
+				catch(java.lang.NumberFormatException e1) {
+					iteration = 0;
+				}
+				
+				try {
+					refroid = Float.parseFloat(jtfName2.getText());
+				}
+				catch(java.lang.NumberFormatException e1) {
+					refroid = (float) 0.95;
+				}
+				
+				try {
+					kopt = Integer.parseInt(jtfName3.getText());
+				}
+				catch(java.lang.NumberFormatException e1) {
+					kopt  = 2;
+				}
+				
+				
+				//refroid = Float.parseFloat(jtfName2.getText());
+				
 				if (algorithmChosenIndex == 1||algorithmChosenIndex == 3)
 					variance = Float.parseFloat(jtfName4.getText());
 				
@@ -285,8 +313,67 @@ public class GUIWindow {
 				System.out.println("refroid:" + refroid);
 				System.out.println("kopt:" + kopt);
 				System.out.println("variance:" + variance);
-				RecuitPVC testRecuit = new RecuitPVC(temperature, scenario, iteration, refroid, kopt);
-				testRecuit.effectuerRecuit();
+				Data test;
+				try {
+					test = new Data(dataAddress);
+					scenario = test.CoutToXY();
+				} catch (DocumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				if (iteration==0 && scenario.getTaille() < 250) {
+					iteration=scenario.getTaille()*scenario.getTaille();
+					if(algorithmChosenIndex == 1)
+						iteration=iteration/10;
+				}
+				if (iteration==0 && scenario.getTaille() >= 250) {
+					iteration=100000;
+					if(algorithmChosenIndex == 1)
+						iteration=iteration/10;
+				}
+				
+				
+				if(algorithmChosenIndex == 0)
+				{
+					RecuitPVC testRecuit = new RecuitPVC(temperature, scenario, iteration, refroid, kopt);
+					testRecuit.effectuerRecuit();
+					scenario = testRecuit.getScenario();
+				}
+				else if(algorithmChosenIndex == 1)
+				{
+					RecuitPVCStochastique testRecuit = new RecuitPVCStochastique(temperature, scenario, iteration, refroid, kopt, variance);
+					testRecuit.effectuerRecuit();
+					scenario = testRecuit.getScenario();
+				}
+				
+				else if(algorithmChosenIndex == 2)
+				{
+					ProgrammeLineaire testCPLEX = new ProgrammeLineaire(scenario);
+					System.out.println(scenario.getCout());
+					try {
+						System.out.println(testCPLEX.resultatCout());
+					} catch (IloException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					testCPLEX.getCircuit().updateCout();
+					scenario = testCPLEX.getCircuit();
+					
+				}
+				else
+				{
+					ProgrammeLineaire testCPLEX = new ProgrammeLineaire(scenario);
+					System.out.println(scenario.getCout());
+					try {
+						System.out.println(testCPLEX.resultatCout());
+					} catch (IloException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					testCPLEX.getCircuit().updateCout();
+					scenario = testCPLEX.getCircuit();
+				}
+
 				showSolution(scenario);
 
 			}
@@ -317,39 +404,41 @@ public class GUIWindow {
 	 * Ouvrir le fichier
 	 */
 	private static void showFileOpenDialog(Component parent, JTextArea msgTextArea) {
-		// åˆ›å»ºä¸€ä¸ªé»˜è®¤çš„æ–‡ä»¶é€‰å�–å™¨
+		// Ã¥Ë†â€ºÃ¥Â»ÂºÃ¤Â¸â‚¬Ã¤Â¸ÂªÃ©Â»ËœÃ¨Â®Â¤Ã§Å¡â€žÃ¦â€“â€¡Ã¤Â»Â¶Ã©â‚¬â€°Ã¥ï¿½â€“Ã¥â„¢Â¨
 		JFileChooser fileChooser = new JFileChooser();
 
-		// è®¾ç½®é»˜è®¤æ˜¾ç¤ºçš„æ–‡ä»¶å¤¹ä¸ºå½“å‰�æ–‡ä»¶å¤¹
-		fileChooser.setCurrentDirectory(new File("./src"));
+		// Ã¨Â®Â¾Ã§Â½Â®Ã©Â»ËœÃ¨Â®Â¤Ã¦ËœÂ¾Ã§Â¤ÂºÃ§Å¡â€žÃ¦â€“â€¡Ã¤Â»Â¶Ã¥Â¤Â¹Ã¤Â¸ÂºÃ¥Â½â€œÃ¥â€°ï¿½Ã¦â€“â€¡Ã¤Â»Â¶Ã¥Â¤Â¹
+		fileChooser.setCurrentDirectory(new File("./data"));
 
-		// è®¾ç½®æ–‡ä»¶é€‰æ‹©çš„æ¨¡å¼�ï¼ˆå�ªé€‰æ–‡ä»¶ã€�å�ªé€‰æ–‡ä»¶å¤¹ã€�æ–‡ä»¶å’Œæ–‡ä»¶å�‡å�¯é€‰ï¼‰
+		// Ã¨Â®Â¾Ã§Â½Â®Ã¦â€“â€¡Ã¤Â»Â¶Ã©â‚¬â€°Ã¦â€¹Â©Ã§Å¡â€žÃ¦Â¨Â¡Ã¥Â¼ï¿½Ã¯Â¼Ë†Ã¥ï¿½ÂªÃ©â‚¬â€°Ã¦â€“â€¡Ã¤Â»Â¶Ã£â‚¬ï¿½Ã¥ï¿½ÂªÃ©â‚¬â€°Ã¦â€“â€¡Ã¤Â»Â¶Ã¥Â¤Â¹Ã£â‚¬ï¿½Ã¦â€“â€¡Ã¤Â»Â¶Ã¥â€™Å’Ã¦â€“â€¡Ã¤Â»Â¶Ã¥ï¿½â€¡Ã¥ï¿½Â¯Ã©â‚¬â€°Ã¯Â¼â€°
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		// è®¾ç½®æ˜¯å�¦å…�è®¸å¤šé€‰
+		// Ã¨Â®Â¾Ã§Â½Â®Ã¦ËœÂ¯Ã¥ï¿½Â¦Ã¥â€¦ï¿½Ã¨Â®Â¸Ã¥Â¤Å¡Ã©â‚¬â€°
 		fileChooser.setMultiSelectionEnabled(false);
 
 		/*
-		 * // æ·»åŠ å�¯ç”¨çš„æ–‡ä»¶è¿‡æ»¤å™¨ï¼ˆFileNameExtensionFilter çš„ç¬¬ä¸€ä¸ªå�‚æ•°æ˜¯æ��è¿°, å�Žé�¢æ˜¯éœ€è¦�è¿‡æ»¤çš„æ–‡ä»¶æ‰©å±•å�� å�¯å�˜å�‚æ•°ï¼‰
+		 * // Ã¦Â·Â»Ã¥Å Â Ã¥ï¿½Â¯Ã§â€�Â¨Ã§Å¡â€žÃ¦â€“â€¡Ã¤Â»Â¶Ã¨Â¿â€¡Ã¦Â»Â¤Ã¥â„¢Â¨Ã¯Â¼Ë†FileNameExtensionFilter Ã§Å¡â€žÃ§Â¬Â¬Ã¤Â¸â‚¬Ã¤Â¸ÂªÃ¥ï¿½â€šÃ¦â€¢Â°Ã¦ËœÂ¯Ã¦ï¿½ï¿½Ã¨Â¿Â°, Ã¥ï¿½Å½Ã©ï¿½Â¢Ã¦ËœÂ¯Ã©Å“â‚¬Ã¨Â¦ï¿½Ã¨Â¿â€¡Ã¦Â»Â¤Ã§Å¡â€žÃ¦â€“â€¡Ã¤Â»Â¶Ã¦â€°Â©Ã¥Â±â€¢Ã¥ï¿½ï¿½ Ã¥ï¿½Â¯Ã¥ï¿½ËœÃ¥ï¿½â€šÃ¦â€¢Â°Ã¯Â¼â€°
 		 * fileChooser.addChoosableFileFilter(new
-		 * FileNameExtensionFilter("zip(*.zip, *.rar)", "zip", "rar")); // è®¾ç½®é»˜è®¤ä½¿ç”¨çš„æ–‡ä»¶è¿‡æ»¤å™¨
+		 * FileNameExtensionFilter("zip(*.zip, *.rar)", "zip", "rar")); // Ã¨Â®Â¾Ã§Â½Â®Ã©Â»ËœÃ¨Â®Â¤Ã¤Â½Â¿Ã§â€�Â¨Ã§Å¡â€žÃ¦â€“â€¡Ã¤Â»Â¶Ã¨Â¿â€¡Ã¦Â»Â¤Ã¥â„¢Â¨
 		 * fileChooser.setFileFilter(new
 		 * FileNameExtensionFilter("image(*.jpg, *.png, *.gif)", "jpg", "png", "gif"));
 		 */
 
-		// æ‰“å¼€æ–‡ä»¶é€‰æ‹©æ¡†ï¼ˆçº¿ç¨‹å°†è¢«é˜»å¡ž, ç›´åˆ°é€‰æ‹©æ¡†è¢«å…³é—­ï¼‰
+		// Ã¦â€°â€œÃ¥Â¼â‚¬Ã¦â€“â€¡Ã¤Â»Â¶Ã©â‚¬â€°Ã¦â€¹Â©Ã¦Â¡â€ Ã¯Â¼Ë†Ã§ÂºÂ¿Ã§Â¨â€¹Ã¥Â°â€ Ã¨Â¢Â«Ã©ËœÂ»Ã¥Â¡Å¾, Ã§â€ºÂ´Ã¥Ë†Â°Ã©â‚¬â€°Ã¦â€¹Â©Ã¦Â¡â€ Ã¨Â¢Â«Ã¥â€¦Â³Ã©â€”Â­Ã¯Â¼â€°
 		int result = fileChooser.showOpenDialog(parent);
 
 		if (result == JFileChooser.APPROVE_OPTION) {
-			// å¦‚æžœç‚¹å‡»äº†"ç¡®å®š", åˆ™èŽ·å�–é€‰æ‹©çš„æ–‡ä»¶è·¯å¾„
+			// Ã¥Â¦â€šÃ¦Å¾Å“Ã§â€šÂ¹Ã¥â€¡Â»Ã¤Âºâ€ "Ã§Â¡Â®Ã¥Â®Å¡", Ã¥Ë†â„¢Ã¨Å½Â·Ã¥ï¿½â€“Ã©â‚¬â€°Ã¦â€¹Â©Ã§Å¡â€žÃ¦â€“â€¡Ã¤Â»Â¶Ã¨Â·Â¯Ã¥Â¾â€ž
 			File file = fileChooser.getSelectedFile();
 
-			// å¦‚æžœå…�è®¸é€‰æ‹©å¤šä¸ªæ–‡ä»¶, åˆ™é€šè¿‡ä¸‹é�¢æ–¹æ³•èŽ·å�–é€‰æ‹©çš„æ‰€æœ‰æ–‡ä»¶
+			// Ã¥Â¦â€šÃ¦Å¾Å“Ã¥â€¦ï¿½Ã¨Â®Â¸Ã©â‚¬â€°Ã¦â€¹Â©Ã¥Â¤Å¡Ã¤Â¸ÂªÃ¦â€“â€¡Ã¤Â»Â¶, Ã¥Ë†â„¢Ã©â‚¬Å¡Ã¨Â¿â€¡Ã¤Â¸â€¹Ã©ï¿½Â¢Ã¦â€“Â¹Ã¦Â³â€¢Ã¨Å½Â·Ã¥ï¿½â€“Ã©â‚¬â€°Ã¦â€¹Â©Ã§Å¡â€žÃ¦â€°â‚¬Ã¦Å“â€°Ã¦â€“â€¡Ã¤Â»Â¶
 			// File[] files = fileChooser.getSelectedFiles();
 
-			// msgTextArea.append("æ‰“å¼€æ–‡ä»¶: " + file.getAbsolutePath() + "\n\n");
-			msgTextArea.append(file.getName());
+			// msgTextArea.append("Ã¦â€°â€œÃ¥Â¼â‚¬Ã¦â€“â€¡Ã¤Â»Â¶: " + file.getAbsolutePath() + "\n\n");
+			msgTextArea.setText(file.getName());
 
-			dataAddress = file.getAbsolutePath();
+			//dataAddress = file.getAbsolutePath();
+			if (file.getName() != "")
+				dataAddress = file.getName().replaceAll(".xml", "");
 			System.out.println("AbsolutePath: " + dataAddress);
 		}
 	}
@@ -362,8 +451,11 @@ public class GUIWindow {
 
 		//canvas.setCoordinate(data.getCoordinate());
 		//canvas.setProportion(data.getProportion());
-		
+		canvas.removeAll();
+		canvas.repaint();
 		canvas.setVilles(scenario.getVilles());
+		canvas.revalidate();
+		
 		
 		lblNewLabel_3.setText("" + scenario.getTaille());
 		lblNewLabel_4.setText("" + scenario.getCout());

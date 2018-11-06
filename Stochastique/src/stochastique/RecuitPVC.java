@@ -10,7 +10,7 @@ public class RecuitPVC extends Recuit {
 		this.scenario=scen;
 		this.iterations=iter;
 		this.refroidissement=refroid;
-		this.Kopt=k;
+		this.Kopt=2; //On force le 2-opt faute de bonne implémentation du k-opt
 	}
 
 	@Override
@@ -23,10 +23,10 @@ public class RecuitPVC extends Recuit {
 		int inf;
 		int sup; //les bornes supérieures et inférieures du sous tour
 		Circuit essai = new Circuit(this.scenario); //Copie du scenario actuel
-		for (int j=0; j<this.Kopt-1; j++) {
+		for (int j=0; j<this.Kopt-1; j++) { //Ne marche en fait qu'en 2-opt...
 			Circuit temp = new Circuit(essai);
-			int a = (int) (Math.random()*this.scenario.taille); 
-			int b = (int) (Math.random()*this.scenario.taille); //les futurs 2 sommets que l'on va inverser au hasard
+			int a = (int) (Math.random()*(this.scenario.taille-2)+1); //les futurs 2 sommets que l'on va inverser au hasard
+			int b = (int) (Math.random()*(this.scenario.taille-2)+1); //le -2 et le +1 servent à ne pas avoir toucher au point de départ/arrivée
 			if (a>b) {
 				inf=b;
 				sup=a;
@@ -48,37 +48,43 @@ public class RecuitPVC extends Recuit {
 	
 	void setTemperatureInitiale() {
 		if (this.temperature==0) {
-			this.temperature=(double) ((this.scenario.cout)/10);
+			this.temperature=(this.scenario.cout)/10;
 			int acceptation;
 			double probaAcceptation=0;
-			while (probaAcceptation<0.8) {
+			Circuit initial = new Circuit(this.scenario);
+			while (probaAcceptation<0.8 && this.temperature<90000) {
 				//Tant qu'on a pas 80% d'acceptation sur un tour complet, on double la température
 				acceptation=0;
 				for (int i=0; i<this.iterations; i++) {
+					this.scenario=new Circuit(initial);
 					Circuit essai=this.genererNouveauScenario();
-					this.accepterScenario(essai);
-					if (this.scenario==essai) {
+					boolean tmp = this.accepterScenario(essai);
+					if (tmp) {
 						acceptation+=1;
 					}
 				}
-				probaAcceptation=acceptation/iterations;
+				probaAcceptation=acceptation/this.iterations;
 				this.temperature*=2;
 			}
 		}
 	}
 	
-	void accepterScenario(Circuit essai) {
+	boolean accepterScenario(Circuit essai) {
 		//Attention, marche uniquement pour un problème de minimisation
 		if (this.scenario.cout>essai.cout) {
 			this.scenario=essai;
+			return true;
 		}
 		else {
-			double temp = Math.exp((this.scenario.cout - essai.cout) / temperature);
+			double sous=(this.scenario.cout - essai.cout);
+			double temp = Math.exp( sous/this.temperature);
 			double proba = Math.random();
-			if (temp<proba) {
+			if (temp>proba) {
 				this.scenario=essai;
+				return true;
 			}
 		}
+		return false;
 	}
 	
 	void effectuerRecuit() {
@@ -86,13 +92,11 @@ public class RecuitPVC extends Recuit {
 		while (this.temperature>1) {
 			for (int i=0; i<this.iterations; i++) {
 				Circuit essai=this.genererNouveauScenario();
-				this.accepterScenario(essai);
+				boolean tmp = this.accepterScenario(essai);
 			}
+			System.out.println(this.scenario.cout);
 			this.majTemperature();
 		}
 	}
-
-
-	
 
 }

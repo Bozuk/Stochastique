@@ -35,7 +35,7 @@ class CircuitPanel extends JPanel {
 			if (villes[i].y < yMin)
 				yMin = villes[i].y;
 		}
-		if ((xMax - xMin) > (730 / 480 * (yMax - yMin)))
+		if ((xMax - xMin) > (730.0 / 480.0 * (yMax - yMin)))
 			proportion = 730 / (xMax - xMin);
 		else
 			proportion = 480 / (yMax - yMin);

@@ -16,10 +16,13 @@ public class Circuit {
 	}
 	
 	public Circuit(Circuit cir){
-		this.villes=cir.villes;
-		this.taille=cir.taille;
-		this.cout = cir.cout;
-		this.tableauCout = cir.tableauCout;
+		taille=cir.taille;
+		villes=new Ville[taille];
+		for (int i=0; i<this.taille; i++) {
+			villes[i]=cir.villes[i];
+		}
+		this.cout=cir.cout;
+		this.tableauCout=cir.tableauCout;
 	}
 	
 
@@ -36,7 +39,6 @@ public class Circuit {
 		return Math.sqrt((x2-x1)*(x2-x1) + (y2 -y1)*(y2 -y1));
 	}
 	
-	//public double coutStochastique(double var) {
 	public double getCout() {
 		return cout;
 	}
@@ -50,11 +52,14 @@ public class Circuit {
 	}
 	
 	public double coutStochastique(double var) {
-		double cout = 0;	
-		for(int i = 0; i < taille-1; i++)
-		{
-			cout += cout2VillesStocha(this.villes[i].x,this.villes[i].y,this.villes[i+1].x,this.villes[i+1].y,var);
+		double cout = 0;
+		for(int j=0; j<10; j++) { //On évalue 10 fois le cout stochastique pour travailler ensuite sur la moyenne
+			for(int i = 0; i < taille-1; i++)
+			{
+				cout += cout2VillesStocha(this.villes[i].x,this.villes[i].y,this.villes[i+1].x,this.villes[i+1].y,var);
+			}
 		}
+		cout=cout/10;
 		return cout;		
 	}
 	
@@ -66,11 +71,36 @@ public class Circuit {
 		double cout = gauss*ecarttype+moy;
 		return cout;
 	}
-	
+
 	public Ville[] getVilles() {
+		// TODO Auto-generated method stub
 		return villes;
 	}
 	
-		
-	//}
+	public void afficherToutesVilles() {
+		for(int i = 0; i < villes.length; i++)
+		{
+			villes[i].affichage();
+		}
+	}
+	
+	public void echanger2Villes(int ville1, int ville2) {
+		Ville tmp;
+		int indVille1 = -1, indVille2 = -1;
+		for(int i = 0; i<villes.length;i++)
+		{
+			if(villes[i].getIndice() == ville1)
+				indVille1 = i;
+			else if(villes[i].getIndice() == ville2)
+				indVille2 = i;
+			
+			if(indVille1 != -1 && indVille2 != -1)
+			{
+				tmp = villes[indVille1];
+				villes[indVille1] = villes[indVille2];
+				villes[indVille2] = tmp;
+				break;
+			}
+		}
+	}
 }

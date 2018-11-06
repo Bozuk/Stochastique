@@ -13,5 +13,9 @@ public class Ville {
 	public void affichage() {
 		System.out.println("X : " + x + ", Y : " + y + ", Numéro : " + num);
 	}
+	
+	public int getIndice() {
+		return num;
+	}
 
 }
